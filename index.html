@@ -1,0 +1,29 @@
+-- 1. 테이블 생성
+create table public.quiz_answers (
+    id uuid primary key default gen_random_uuid(),
+    attempt_id uuid not null,
+    question_no smallint not null,
+    english_word text not null,
+    chosen_answer text not null,
+    is_correct boolean not null,
+    response_time_ms integer not null,
+    created_at timestamptz not null default now(),
+    constraint check_question_no check (question_no between 1 and 3),
+    constraint check_response_time check (response_time_ms >= 0)
+);
+
+-- 2. RLS 활성화
+alter table public.quiz_answers enable row level security;
+
+-- 3. 기존 권한 취소 (REVOKE)
+revoke all on public.quiz_answers from anon, authenticated;
+
+-- 4. anon 역할에 INSERT 권한만 부여
+grant insert on public.quiz_answers to anon;
+
+-- 5. anon INSERT 정책 생성
+create policy "Allow anonymous inserts"
+    on public.quiz_answers
+    for insert
+    to anon
+    with check (true);
